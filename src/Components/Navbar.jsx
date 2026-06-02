@@ -9,7 +9,6 @@ const getUserFromStorage = () => {
     const stored = localStorage.getItem('trailbliss_user') || sessionStorage.getItem('trailbliss_user');
     return stored ? JSON.parse(stored) : null;
   } catch (error) {
-    console.error('Error reading user from storage:', error);
     localStorage.removeItem('trailbliss_user');
     sessionStorage.removeItem('trailbliss_user');
     return null;
@@ -20,7 +19,7 @@ const clearUserStorage = () => {
     localStorage.removeItem('trailbliss_user');
     sessionStorage.removeItem('trailbliss_user');
   } catch (error) {
-    console.error('Error clearing user storage:', error);
+    // Silent fail
   }
 };
 

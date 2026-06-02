@@ -32,7 +32,7 @@ function useFormValidation(initialState, validationRules) {
     setErrors({});
   };
   
-  return { form, errors, handleChange, validate, setErrors, reset };
+  return { form, errors, handleChange, validate, reset, setErrors };
 }
 
 function Contact() {
@@ -40,7 +40,7 @@ function Contact() {
   const [sent, setSent] = useState(false);
   
   // Using custom form hook
-  const { form, errors, handleChange, validate, setErrors, reset } = useFormValidation(
+  const { form, errors, handleChange, validate, reset, setErrors } = useFormValidation(
     { name: "", email: "", subject: "", message: "" },
     {
       name: { required: true, requiredMessage: "Name is required" },
@@ -60,7 +60,7 @@ function Contact() {
     // Cleanup function when component unmounts
     return () => {
       if (loading) {
-        console.log('Contact form cleanup');
+        // Form cleanup
       }
     };
   }, [loading]);

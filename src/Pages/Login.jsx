@@ -7,19 +7,7 @@ const getStoredUsers = () => {
   try {
     return JSON.parse(localStorage.getItem('trailbliss_users') || '[]');
   } catch (error) {
-    console.error('Error reading users from localStorage:', error);
     return [];
-  }
-};
-const getUserFromStorage = () => {
-  try {
-    const stored = localStorage.getItem('trailbliss_user') || sessionStorage.getItem('trailbliss_user');
-    return stored ? JSON.parse(stored) : null;
-  } catch (error) {
-    console.error('Error reading user from storage:', error);
-    localStorage.removeItem('trailbliss_user');
-    sessionStorage.removeItem('trailbliss_user');
-    return null;
   }
 };
 const setUserInStorage = (userData, remember) => {
@@ -30,7 +18,7 @@ const setUserInStorage = (userData, remember) => {
       sessionStorage.setItem('trailbliss_user', JSON.stringify(userData));
     }
   } catch (error) {
-    console.error('Error saving user to storage:', error);
+    // Silent fail
   }
 };
 const isEmailRegistered = (email) => {

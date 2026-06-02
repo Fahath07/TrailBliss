@@ -7,7 +7,6 @@ const getStoredUsers = () => {
   try {
     return JSON.parse(localStorage.getItem('trailbliss_users') || '[]');
   } catch (error) {
-    console.error('Error reading users from localStorage:', error);
     return [];
   }
 };
@@ -17,7 +16,7 @@ const saveUser = (userData) => {
     users.push(userData);
     localStorage.setItem('trailbliss_users', JSON.stringify(users));
   } catch (error) {
-    console.error('Error saving user to localStorage:', error);
+    // Silent fail
   }
 };
 const isEmailRegistered = (email) => {

@@ -26,8 +26,9 @@
       "react-app/jest"
     ],
     "rules": {
-      "no-unused-vars": "warn",
-      "jsx-a11y/anchor-is-valid": "warn"
+      "no-unused-vars": "error",
+      "jsx-a11y/anchor-is-valid": "warn",
+      "no-console": "warn"
     }
   },
   "browserslist": {
