@@ -1,97 +1,51 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/api";
+import { useAuth } from "../context/AuthContext";
 import "./Auth.css";
-
-// Auth utilities built into the component with error handling
-const getStoredUsers = () => {
-  try {
-    return JSON.parse(localStorage.getItem('trailbliss_users') || '[]');
-  } catch (error) {
-    return [];
-  }
-};
-const setUserInStorage = (userData, remember) => {
-  try {
-    if (remember) {
-      localStorage.setItem('trailbliss_user', JSON.stringify(userData));
-    } else {
-      sessionStorage.setItem('trailbliss_user', JSON.stringify(userData));
-    }
-  } catch (error) {
-    // Silent fail
-  }
-};
-const isEmailRegistered = (email) => {
-  return getStoredUsers().some(user => user.email === email);
-};
-const authenticateUser = (email, password) => {
-  return getStoredUsers().find(user => user.email === email && user.password === password);
-};
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "", remember: false });
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // single handler for all fields — keeps things clean
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-    // clear the error for that field as the user types
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   }
 
   function validate() {
     const errs = {};
-    if (!form.email.trim()) {
-      errs.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      errs.email = "Enter a valid email";
-    } else if (!isEmailRegistered(form.email)) {
-      errs.email = "Email not registered. Please sign up first";
-    }
-    if (!form.password) {
-      errs.password = "Password is required";
-    } else if (form.password.length < 6) {
-      errs.password = "Password must be at least 6 characters";
-    }
+    if (!form.email.trim()) errs.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Enter a valid email";
+    if (!form.password) errs.password = "Password is required";
     return errs;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
     setLoading(true);
-    
-    // Authenticate user
-    const authenticatedUser = authenticateUser(form.email, form.password);
-    
-    setTimeout(() => {
-      if (authenticatedUser) {
-        const userData = {
-          email: authenticatedUser.email,
-          firstName: authenticatedUser.firstName,
-          lastName: authenticatedUser.lastName,
-          phone: authenticatedUser.phone
-        };
-        setUserInStorage(userData, form.remember);
-        setLoading(false);
-        navigate("/");
-        // Dispatch custom event to update navbar
-        window.dispatchEvent(new Event('userLogin'));
-      } else {
-        setLoading(false);
-        setErrors({ password: "Invalid email or password" });
-      }
-    }, 800);
+    try {
+      const { data } = await api.post("/user/login", {
+        email: form.email,
+        password: form.password,
+      });
+      // Use the login function from AuthContext
+      login(data.data, data.token);
+      navigate("/");
+    } catch (err) {
+      setErrors({ password: err.response?.data?.message || "Invalid email or password" });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -130,11 +84,7 @@ function Login() {
                 value={form.password}
                 onChange={handleChange}
               />
-              <button
-                type="button"
-                className="toggle-pass"
-                onClick={() => setShowPass(!showPass)}
-              >
+              <button type="button" className="toggle-pass" onClick={() => setShowPass(!showPass)}>
                 {showPass ? "🙈" : "👁️"}
               </button>
             </div>
@@ -143,23 +93,13 @@ function Login() {
 
           <div className="auth-row">
             <label className="checkbox-label">
-              <input
-                type="checkbox"
-                name="remember"
-                checked={form.remember}
-                onChange={handleChange}
-              />
+              <input type="checkbox" name="remember" checked={form.remember} onChange={handleChange} />
               Remember me
             </label>
             <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary"
-            style={{ width: "100%", marginTop: 8 }}
-            disabled={loading}
-          >
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: 8 }} disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
