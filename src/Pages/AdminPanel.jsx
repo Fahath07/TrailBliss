@@ -5,11 +5,16 @@ import { useAuth } from "../context/AuthContext";
 import "./AdminPanel.css";
 
 const STATUS_COLORS = {
-  confirmed: "badge-green", pending: "badge-gold", cancelled: "badge-red",
+  Confirmed: "badge-green", confirmed: "badge-green",
+  Pending: "badge-gold", pending: "badge-gold",
+  Cancelled: "badge-red", cancelled: "badge-red",
 };
 
 const ENQUIRY_STATUS_COLORS = {
-  new: "badge-blue", open: "badge-gold", resolved: "badge-green", closed: "badge-red",
+  New: "badge-blue", new: "badge-blue",
+  "In Progress": "badge-gold", open: "badge-gold",
+  Resolved: "badge-green", resolved: "badge-green",
+  Closed: "badge-red", closed: "badge-red",
 };
 
 const EMPTY_TRIP = {
@@ -31,7 +36,7 @@ function StatCard({ icon, label, value, color, sub }) {
 }
 
 function AdminPanel() {
-  const { user, logout } = useAuth();
+  const { user, logout, authLoading } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState("dashboard");
 
@@ -51,11 +56,12 @@ function AdminPanel() {
   const [tripMsg, setTripMsg] = useState("");
   const [editingTrip, setEditingTrip] = useState(null);
 
-  // Guard
+  // Guard — wait for profile fetch before redirecting
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { navigate("/login"); return; }
     if (user.role !== "admin") navigate("/");
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // ── Fetch helpers ──────────────────────────────────────────────
   const fetchBookings = useCallback(() => {
@@ -230,6 +236,7 @@ function AdminPanel() {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 5);
 
+  if (authLoading) return null;
   if (!user || user.role !== "admin") return null;
 
   const NAV_ITEMS = [
@@ -388,9 +395,9 @@ function AdminPanel() {
                         <td>
                           <select className="admin-select" value={b.status}
                             onChange={e => updateBookingStatus(b._id, e.target.value)}>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Cancelled">Cancelled</option>
                           </select>
                         </td>
                         <td>—</td>
@@ -427,12 +434,12 @@ function AdminPanel() {
                         <td style={{ maxWidth: 200 }}><span className="table-truncate">{e.message}</span></td>
                         <td>{e.createdAt ? new Date(e.createdAt).toLocaleDateString() : "—"}</td>
                         <td>
-                          <select className="admin-select" value={e.status || "new"}
+                          <select className="admin-select" value={e.status || "New"}
                             onChange={ev => updateEnquiryStatus(e._id, ev.target.value)}>
-                            <option value="new">New</option>
-                            <option value="open">Open</option>
-                            <option value="resolved">Resolved</option>
-                            <option value="closed">Closed</option>
+                            <option value="New">New</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
                           </select>
                         </td>
                         <td>

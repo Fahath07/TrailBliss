@@ -34,8 +34,8 @@ function ApplicationForm() {
     try {
       const { data } = await api.get("/trips");
       setPackages(data.data || []);
-    } catch (err) {
-      console.error("Failed to fetch packages", err);
+    } catch {
+      // silently fail — packages list stays empty
     }
   }
 
@@ -148,7 +148,6 @@ function ApplicationForm() {
       
       setSubmitted(true);
     } catch (err) {
-      console.error("Submission failed:", err);
       setErrors({ submit: err.response?.data?.message || "Submission failed. Please try again." });
     } finally {
       setLoading(false);

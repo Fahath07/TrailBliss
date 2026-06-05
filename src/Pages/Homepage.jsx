@@ -1,17 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import api from "../api/api";
 import heroTitle from "../Assets/Images/herotitle.png";
 import munnar from "../Assets/Images/munnar.jpg";
 import alleppey from "../Assets/Images/alleppey.jpg";
 import kodaikanal from "../Assets/Images/kodaikanal.jpg";
 import adventure from "../Assets/Images/adventure.jpg";
 import "./Homepage.css";
-
-const packages = [
-  { img: munnar, location: "Munnar, Kerala", title: "Tea Hill Retreat", desc: "4 days of misty tea estates, scenic walks, and authentic local cuisine.", price: "₹2,499", badge: "Popular" },
-  { img: alleppey, location: "Alleppey, Kerala", title: "Backwater Houseboat", desc: "2 nights drifting through serene backwaters with all meals included.", price: "₹2,899", badge: "Bestseller" },
-  { img: kodaikanal, location: "Kodaikanal, Tamil Nadu", title: "Hill Station Getaway", desc: "3 days of lakes, waterfalls, and cool mountain air in the clouds.", price: "₹2,199", badge: "New" },
-];
 
 const features = [
   { icon: "🗺️", title: "Custom Itineraries", desc: "Every trip is tailored to your pace, budget, and interests." },
@@ -77,6 +72,13 @@ function NewsletterBar() {
 }
 
 function Homepage() {
+  const [featuredPackages, setFeaturedPackages] = useState([]);
+
+  useEffect(() => {
+    api.get("/trips").then(({ data }) => {
+      setFeaturedPackages((data.data || []).slice(0, 3));
+    }).catch(() => {});
+  }, []);
   return (
     <div className="homepage">
     
@@ -134,22 +136,25 @@ function Homepage() {
             <Link to="/packages" className="btn btn-outline">View All</Link>
           </div>
           <div className="grid-3" style={{ marginTop: 32 }}>
-            {packages.map((p) => (
-              <div className="card pkg-card" key={p.title}>
-                <div className="pkg-img" style={{ backgroundImage: `url(${p.img})` }}>
-                  <span className="badge badge-gold">{p.badge}</span>
+            {featuredPackages.map((p) => (
+              <div className="card pkg-card" key={p._id}>
+                <div className="pkg-img" style={{ backgroundImage: `url(${p.images?.featured || munnar})` }}>
+                  {p.badge && <span className="badge badge-gold">{p.badge}</span>}
                 </div>
                 <div className="pkg-body">
-                  <p className="pkg-location">📍 {p.location}</p>
+                  <p className="pkg-location">📍 {p.location?.city || p.location}</p>
                   <h3>{p.title}</h3>
-                  <p className="pkg-desc">{p.desc}</p>
+                  <p className="pkg-desc">{p.description}</p>
                   <div className="pkg-footer">
-                    <span className="pkg-price">{p.price} <small>/person</small></span>
+                    <span className="pkg-price">₹{(p.pricing?.basePrice || p.price)?.toLocaleString()} <small>/person</small></span>
                     <Link to="/apply" className="btn btn-primary btn-sm">Book Now</Link>
                   </div>
                 </div>
               </div>
             ))}
+            {featuredPackages.length === 0 && (
+              <p style={{ color: "var(--muted)", gridColumn: "1/-1" }}>Loading packages...</p>
+            )}
           </div>
         </div>
       </section>

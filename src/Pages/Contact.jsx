@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Field from "../Components/Field";
+import api from "../api/api";
 import "./Contact.css";
 
 // Custom hook for form management built into component
@@ -65,18 +66,25 @@ function Contact() {
     };
   }, [loading]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length > 0) { 
-      setErrors(errs); 
-      return; 
-    }
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setLoading(true);
-    setTimeout(() => { 
-      setLoading(false); 
-      setSent(true); 
-    }, 1000);
+    try {
+      await api.post("/enquiries", {
+        enquiryId: `ENQ-${Date.now()}`,
+        name: form.name,
+        email: form.email,
+        subject: form.subject,
+        message: form.message,
+      });
+      setSent(true);
+    } catch (err) {
+      setErrors({ message: err.response?.data?.message || "Failed to send. Please try again." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleReset() {

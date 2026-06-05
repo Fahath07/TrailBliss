@@ -25,10 +25,10 @@ function Layout({ children }) {
   );
 }
 
-// Redirects unauthenticated users to /login, preserving the intended destination
 function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { user, authLoading } = useAuth();
   const location = useLocation();
+  if (authLoading) return null;
   if (!user) {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
