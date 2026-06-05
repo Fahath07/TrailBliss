@@ -137,14 +137,13 @@ function ApplicationForm() {
         
         await api.post("/bookings", bookingData);
       } else {
-        const enquiryData = {
+        await api.post("/enquiries", {
+          enquiryId: `ENQ-${Date.now()}`,
           name: enquiryForm.name,
           email: enquiryForm.email,
           subject: enquiryForm.subject,
-          message: enquiryForm.message
-        };
-        
-        await api.post("/enquiries", enquiryData);
+          message: enquiryForm.message,
+        });
       }
       
       setSubmitted(true);
