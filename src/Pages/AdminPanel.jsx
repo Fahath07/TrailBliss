@@ -52,7 +52,7 @@ function AdminPanel() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  // Trip form
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const [tripForm, setTripForm] = useState(EMPTY_TRIP);
   const [tripMsg, setTripMsg] = useState("");
   const [editingTrip, setEditingTrip] = useState(null);
@@ -281,7 +281,19 @@ function AdminPanel() {
             <p>Welcome back, {user.firstname} 👋</p>
           </div>
           <div className="admin-topbar-right">
-            <span className="admin-avatar">{user.firstname?.[0]?.toUpperCase()}</span>
+            <div className="admin-avatar-wrap">
+              <span className="admin-avatar" onClick={() => setAvatarOpen(o => !o)}>
+                {user.firstname?.[0]?.toUpperCase()}
+              </span>
+              {avatarOpen && (
+                <div className="admin-avatar-dropdown">
+                  <p className="avatar-dropdown-name">{user.firstname} {user.lastname}</p>
+                  <p className="avatar-dropdown-email">{user.email}</p>
+                  <hr className="avatar-dropdown-divider" />
+                  <button onClick={() => { setAvatarOpen(false); handleLogout(); }}>🚪 Logout</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
