@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
 import "./Auth.css";
@@ -12,6 +13,30 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const profileRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const profile = await profileRes.json();
+        const { data } = await api.post("/user/google", {
+          googleId: profile.sub,
+          email: profile.email,
+          firstname: profile.given_name,
+          lastname: profile.family_name || "",
+          avatar: profile.picture,
+        });
+        login(data.data);
+        if (data.data.role === "admin") navigate("/admin");
+        else navigate("/");
+      } catch (err) {
+        setErrors({ general: err.response?.data?.message || "Google login failed." });
+      }
+    },
+    onError: () => setErrors({ general: "Google login failed." }),
+  });
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -110,6 +135,11 @@ function Login() {
         </form>
 
         <div className="auth-divider"><span>or</span></div>
+
+        <button type="button" className="btn-google" onClick={() => googleLogin()}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={18} height={18} />
+          Continue with Google
+        </button>
 
         <p className="auth-switch">
           Don't have an account?{" "}
