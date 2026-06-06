@@ -35,11 +35,19 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { user, authLoading } = useAuth();
+  if (authLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
+  return children;
+}
+
 function AppRoutes() {
   return (
     <Routes>
       {/* Admin — no Navbar/Footer */}
-      <Route path="/admin" element={<AdminPanel />} />
+      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
 
       {/* Public pages */}
       <Route path="/" element={<Layout><Homepage /></Layout>} />

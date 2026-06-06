@@ -41,7 +41,11 @@ function Login() {
         password: form.password,
       });
       login(data.data);
-      navigate("/");
+      if (data.data.role === 'admin') {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setErrors({ general: err.response?.data?.message || "Login failed. Please try again." });
     } finally {
