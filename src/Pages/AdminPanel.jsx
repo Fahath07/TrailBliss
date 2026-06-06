@@ -172,7 +172,7 @@ function AdminPanel() {
       setTripForm(EMPTY_TRIP);
       fetchTrips();
     } catch (err) {
-      setTripMsg(err.response?.data?.message || "Failed to save trip.");
+      setTripMsg(err.response?.data?.error || err.response?.data?.message || "Failed to save trip.");
     }
   }
 
