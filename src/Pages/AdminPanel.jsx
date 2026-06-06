@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
+import logo from "../Assets/Images/trailbliss.png";
 import "./AdminPanel.css";
 
 const STATUS_COLORS = {
@@ -252,8 +253,7 @@ function AdminPanel() {
       {/* ── Sidebar ── */}
       <aside className="admin-sidebar">
         <div className="admin-logo">
-          <span>🧭</span>
-          <strong>TrailBliss</strong>
+          <img src={logo} alt="TrailBliss" style={{ height: 36, objectFit: "contain" }} />
           <small>Admin Panel</small>
         </div>
         <nav className="admin-nav">
