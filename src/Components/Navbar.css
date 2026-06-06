@@ -87,7 +87,45 @@
   white-space: nowrap;
 }
 
+.navbar-admin {
+  background: var(--navy);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.navbar-admin .navbar-brand { color: var(--white); }
+.navbar-admin .navbar-brand strong { color: var(--gold); }
+.navbar-admin .nav-toggle span { background: var(--white); }
+.navbar-admin .nav-links a {
+  color: rgba(255,255,255,0.75);
+}
+.navbar-admin .nav-links a:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+}
+.navbar-admin .nav-links a.active {
+  color: var(--gold);
+  background: rgba(212,175,55,0.15);
+}
+.navbar-admin .user-greeting { color: rgba(255,255,255,0.75); }
+
+.admin-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--gold);
+  color: var(--navy);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  margin-left: 6px;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 @media (max-width: 768px) {
+  .navbar-admin .nav-links {
+    background: var(--navy);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+}
   .nav-toggle { display: flex; }
   .navbar-inner { padding: 12px 20px; }
   .nav-links {

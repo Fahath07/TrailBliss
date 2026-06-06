@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import logo from "../Assets/Images/trailbliss.png";
 import "./AdminPanel.css";
 
 const STATUS_COLORS = {
@@ -56,6 +55,13 @@ function AdminPanel() {
   const [tripForm, setTripForm] = useState(EMPTY_TRIP);
   const [tripMsg, setTripMsg] = useState("");
   const [editingTrip, setEditingTrip] = useState(null);
+
+  // Listen for tab switch from admin navbar
+  useEffect(() => {
+    function handleAdminTab(e) { setTab(e.detail); }
+    window.addEventListener("admin-tab", handleAdminTab);
+    return () => window.removeEventListener("admin-tab", handleAdminTab);
+  }, []);
 
   // Guard — wait for profile fetch before redirecting
   useEffect(() => {
@@ -250,27 +256,7 @@ function AdminPanel() {
 
   return (
     <div className="admin-page">
-      {/* ── Sidebar ── */}
-      <aside className="admin-sidebar">
-        <div className="admin-logo">
-          <img src={logo} alt="TrailBliss" style={{ height: 36, objectFit: "contain" }} />
-          <small>Admin Panel</small>
-        </div>
-        <nav className="admin-nav">
-          {NAV_ITEMS.map(item => (
-            <button key={item.key}
-              className={`admin-nav-item ${tab === item.key ? "active" : ""}`}
-              onClick={() => setTab(item.key)}>
-              <span>{item.icon}</span> {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="admin-sidebar-footer">
-          <button className="admin-nav-item" onClick={handleLogout}>
-            <span>🚪</span> Logout
-          </button>
-        </div>
-      </aside>
+      {/* ── Sidebar (hidden — nav handled by top navbar) ── */}
 
       {/* ── Main ── */}
       <main className="admin-main">
