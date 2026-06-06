@@ -34,6 +34,7 @@ function Signup() {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (errors.general) setErrors((prev) => ({ ...prev, general: "" }));
   }
 
   function validate() {
@@ -42,7 +43,7 @@ function Signup() {
     if (!form.lastName.trim()) errs.lastName = "Required";
     if (!form.email.trim()) errs.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Enter a valid email";
-    if (!form.phone.trim()) errs.phone = "Required";
+    if (!form.phone.trim()) errs.phone = "Phone number is required";
     if (!form.password) errs.password = "Password is required";
     else if (form.password.length < 8) errs.password = "Min. 8 characters";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "Passwords don't match";
@@ -57,6 +58,7 @@ function Signup() {
 
     setLoading(true);
     try {
+      // Backend sets httpOnly cookie, returns user data only
       const { data } = await api.post("/user/signup", {
         firstname: form.firstName,
         lastname: form.lastName,
@@ -64,11 +66,15 @@ function Signup() {
         phone: form.phone,
         password: form.password,
       });
-      login(data.data, data.token);
+      login(data.data);
       navigate("/");
     } catch (err) {
       const msg = err.response?.data?.message || "Registration failed. Please try again.";
-      setErrors({ email: msg });
+      if (msg.toLowerCase().includes("email")) {
+        setErrors({ email: msg });
+      } else {
+        setErrors({ general: msg });
+      }
     } finally {
       setLoading(false);
     }
@@ -84,6 +90,10 @@ function Signup() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          {errors.general && (
+            <div className="auth-error-banner">{errors.general}</div>
+          )}
+
           <div className="form-row-2">
             <div className="form-group">
               <label htmlFor="firstName">First Name</label>

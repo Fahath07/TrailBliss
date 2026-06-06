@@ -4,72 +4,50 @@ import { useAuth } from "../context/AuthContext";
 import api from "../api/api";
 import "./ApplicationForm.css";
 
-
 function ApplicationForm() {
   const [tab, setTab] = useState("book");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [packages, setPackages] = useState([]);
-  // const [selectedPackage, setSelectedPackage] = useState(null); // Remove unused variable
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const pkgId = searchParams.get("pkg");
 
-  useEffect(() => {
-    fetchPackages();
-  }, []);
-
-  useEffect(() => {
-    if (pkgId && packages.length > 0) {
-      const pkg = packages.find(p => p._id === pkgId);
-      if (pkg) {
-        // setSelectedPackage(pkg);
-        setBookingForm(prev => ({ ...prev, package: pkg._id }));
-      }
-    }
-  }, [pkgId, packages]);
-
-  async function fetchPackages() {
-    try {
-      const { data } = await api.get("/trips");
-      setPackages(data.data || []);
-    } catch {
-      // silently fail — packages list stays empty
-    }
-  }
-
   const [bookingForm, setBookingForm] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    travelers: "",
-    package: "",
-    travelDate: "",
-    budget: "",
-    tripType: "",
-    notes: "",
+    fullName: "", email: "", phone: "",
+    travelers: "1", package: "",
+    travelDate: "", tripType: "Solo", notes: "",
   });
 
   const [enquiryForm, setEnquiryForm] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
+    name: "", email: "", phone: "", subject: "", message: "",
   });
 
   const [errors, setErrors] = useState({});
 
-  // Pre-fill user details once user is available
+  // Load packages from MongoDB
+  useEffect(() => {
+    api.get("/trips")
+      .then(({ data }) => setPackages(data.data || []))
+      .catch(() => {});
+  }, []);
+
+  // Pre-select package from URL param
+  useEffect(() => {
+    if (pkgId) setBookingForm(prev => ({ ...prev, package: pkgId }));
+  }, [pkgId]);
+
+  // Pre-fill logged-in user details
   useEffect(() => {
     if (user) {
-      setBookingForm((prev) => ({
+      setBookingForm(prev => ({
         ...prev,
         fullName: `${user.firstname || ""} ${user.lastname || ""}`.trim(),
         email: user.email || "",
         phone: user.phone || "",
       }));
-      setEnquiryForm((prev) => ({
+      setEnquiryForm(prev => ({
         ...prev,
         name: `${user.firstname || ""} ${user.lastname || ""}`.trim(),
         email: user.email || "",
@@ -79,14 +57,14 @@ function ApplicationForm() {
 
   function handleBookingChange(e) {
     const { name, value } = e.target;
-    setBookingForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    setBookingForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   }
 
   function handleEnquiryChange(e) {
     const { name, value } = e.target;
-    setEnquiryForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    setEnquiryForm(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   }
 
   function validateBooking() {
@@ -96,8 +74,8 @@ function ApplicationForm() {
     else if (!/\S+@\S+\.\S+/.test(bookingForm.email)) errs.email = "Invalid email";
     if (!bookingForm.phone.trim()) errs.phone = "Required";
     if (!bookingForm.travelers) errs.travelers = "Required";
-    if (!bookingForm.package) errs.package = "Select a package";
-    if (!bookingForm.travelDate) errs.travelDate = "Select a date";
+    if (!bookingForm.package) errs.package = "Please select a package";
+    if (!bookingForm.travelDate) errs.travelDate = "Please select a date";
     return errs;
   }
 
@@ -115,37 +93,36 @@ function ApplicationForm() {
     e.preventDefault();
     const errs = tab === "book" ? validateBooking() : validateEnquiry();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    
+
     setLoading(true);
     try {
       if (tab === "book") {
-        const bookingData = {
+        // Payload matches BookingController.CreateBooking exactly
+        await api.post("/bookings", {
           packageId: bookingForm.package,
           travelerDetails: {
-            numberOfTravelers: parseInt(bookingForm.travelers),
             fullName: bookingForm.fullName,
             email: bookingForm.email,
             phone: bookingForm.phone,
-            tripType: bookingForm.tripType
+            numberOfTravelers: parseInt(bookingForm.travelers),
+            tripType: bookingForm.tripType || "Solo",
           },
           travelDetails: {
-            startDate: new Date(bookingForm.travelDate),
-            budgetRange: bookingForm.budget,
-            specialRequests: bookingForm.notes
-          }
-        };
-        
-        await api.post("/bookings", bookingData);
+            startDate: bookingForm.travelDate,
+            specialRequests: bookingForm.notes,
+          },
+        });
       } else {
+        // Payload matches EnquiryController.createEnquiry exactly
         await api.post("/enquiries", {
-          enquiryId: `ENQ-${Date.now()}`,
           name: enquiryForm.name,
           email: enquiryForm.email,
+          phone: enquiryForm.phone || "",
           subject: enquiryForm.subject,
           message: enquiryForm.message,
+          category: "General",
         });
       }
-      
       setSubmitted(true);
     } catch (err) {
       setErrors({ submit: err.response?.data?.message || "Submission failed. Please try again." });
@@ -156,8 +133,6 @@ function ApplicationForm() {
 
   function handleReset() {
     setSubmitted(false);
-    setBookingForm({ fullName: "", email: "", phone: "", travelers: "", package: "", travelDate: "", budget: "", tripType: "", notes: "" });
-    setEnquiryForm({ name: "", email: "", subject: "", message: "" });
     setErrors({});
     navigate("/packages");
   }
@@ -167,7 +142,7 @@ function ApplicationForm() {
       <div className="form-success-page">
         <div className="form-success-card card fade-up">
           <div className="success-icon">🎉</div>
-          <h2>Booking Confirmed!</h2>
+          <h2>{tab === "book" ? "Booking Confirmed!" : "Enquiry Sent!"}</h2>
           <p>
             Your {tab === "book" ? "booking application" : "enquiry"} has been received.
             Our team will contact you within 24 hours.
@@ -177,7 +152,6 @@ function ApplicationForm() {
       </div>
     );
   }
-
 
   return (
     <div>
@@ -230,8 +204,7 @@ function ApplicationForm() {
                     <select name="travelers"
                       className={`form-control ${errors.travelers ? "input-error" : ""}`}
                       value={bookingForm.travelers} onChange={handleBookingChange}>
-                      <option value="">Select</option>
-                      {[1, 2, 3, 4, 5, "6+"].map((n) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
                         <option key={n} value={n}>{n} {n === 1 ? "Person" : "People"}</option>
                       ))}
                     </select>
@@ -243,14 +216,14 @@ function ApplicationForm() {
                 <h3 className="form-section-title">Trip Details</h3>
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label>Preferred Package *</label>
+                    <label>Select Package *</label>
                     <select name="package"
                       className={`form-control ${errors.package ? "input-error" : ""}`}
                       value={bookingForm.package} onChange={handleBookingChange}>
-                      <option value="">Select a package</option>
-                      {packages.map((pkg) => (
-                        <option key={pkg._id || pkg.id} value={pkg._id || pkg.id}>
-                          {pkg.title} - {pkg.location || pkg.location?.city}
+                      <option value="">Choose a package</option>
+                      {packages.map(pkg => (
+                        <option key={pkg._id} value={pkg._id}>
+                          {pkg.title} — {pkg.location?.city}{pkg.location?.state ? `, ${pkg.location.state}` : ""} (₹{pkg.pricing?.basePrice?.toLocaleString()})
                         </option>
                       ))}
                     </select>
@@ -260,28 +233,18 @@ function ApplicationForm() {
                     <label>Travel Date *</label>
                     <input name="travelDate" type="date"
                       className={`form-control ${errors.travelDate ? "input-error" : ""}`}
+                      min={new Date().toISOString().split("T")[0]}
                       value={bookingForm.travelDate} onChange={handleBookingChange} />
                     {errors.travelDate && <span className="error-msg">{errors.travelDate}</span>}
                   </div>
                   <div className="form-group">
-                    <label>Budget Range</label>
-                    <select name="budget" className="form-control" value={bookingForm.budget} onChange={handleBookingChange}>
-                      <option value="">Select</option>
-                      <option>Under ₹2,000</option>
-                      <option>₹2,000 – ₹3,000</option>
-                      <option>₹3,000 – ₹5,000</option>
-                      <option>Above ₹5,000</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
                     <label>Trip Type</label>
                     <select name="tripType" className="form-control" value={bookingForm.tripType} onChange={handleBookingChange}>
-                      <option value="">Select</option>
-                      <option>Family</option>
-                      <option>Couple</option>
-                      <option>Solo</option>
-                      <option>Friends Group</option>
-                      <option>Corporate</option>
+                      <option value="Solo">Solo</option>
+                      <option value="Couple">Couple</option>
+                      <option value="Family">Family</option>
+                      <option value="Friends Group">Friends Group</option>
+                      <option value="Corporate">Corporate</option>
                     </select>
                   </div>
                 </div>
@@ -296,8 +259,8 @@ function ApplicationForm() {
                     value={bookingForm.notes} onChange={handleBookingChange} maxLength={500} />
                 </div>
 
-                {errors.submit && <div className="error-msg" style={{ marginTop: 16 }}>{errors.submit}</div>}
-                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 24 }} disabled={loading}>
+                {errors.submit && <div className="auth-error-banner" style={{ marginTop: 16 }}>{errors.submit}</div>}
+                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 24, width: "100%" }} disabled={loading}>
                   {loading ? "Submitting..." : "Confirm Booking ✈️"}
                 </button>
               </form>
@@ -319,6 +282,11 @@ function ApplicationForm() {
                       placeholder="you@example.com" value={enquiryForm.email} onChange={handleEnquiryChange} />
                     {errors.email && <span className="error-msg">{errors.email}</span>}
                   </div>
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input name="phone" type="tel" className="form-control"
+                      placeholder="+91 98765 43210" value={enquiryForm.phone} onChange={handleEnquiryChange} />
+                  </div>
                 </div>
                 <div className="form-group" style={{ marginTop: 16 }}>
                   <label>Subject *</label>
@@ -339,8 +307,8 @@ function ApplicationForm() {
                     value={enquiryForm.message} onChange={handleEnquiryChange} maxLength={1000} />
                   {errors.message && <span className="error-msg">{errors.message}</span>}
                 </div>
-                {errors.submit && <div className="error-msg" style={{ marginTop: 16 }}>{errors.submit}</div>}
-                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 24 }} disabled={loading}>
+                {errors.submit && <div className="auth-error-banner" style={{ marginTop: 16 }}>{errors.submit}</div>}
+                <button type="submit" className="btn btn-primary btn-lg" style={{ marginTop: 24, width: "100%" }} disabled={loading}>
                   {loading ? "Sending..." : "Send Enquiry 💬"}
                 </button>
               </form>

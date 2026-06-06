@@ -8,15 +8,16 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [form, setForm] = useState({ email: "", password: "", remember: false });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (errors.general) setErrors((prev) => ({ ...prev, general: "" }));
   }
 
   function validate() {
@@ -34,15 +35,15 @@ function Login() {
 
     setLoading(true);
     try {
+      // Backend sets httpOnly cookie, returns user data only
       const { data } = await api.post("/user/login", {
         email: form.email,
         password: form.password,
       });
-      // Use the login function from AuthContext
-      login(data.data, data.token);
+      login(data.data);
       navigate("/");
     } catch (err) {
-      setErrors({ password: err.response?.data?.message || "Invalid email or password" });
+      setErrors({ general: err.response?.data?.message || "Login failed. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -58,6 +59,10 @@ function Login() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          {errors.general && (
+            <div className="auth-error-banner">{errors.general}</div>
+          )}
+
           <div className="form-group">
             <label htmlFor="login-email">Email Address</label>
             <input
@@ -92,10 +97,6 @@ function Login() {
           </div>
 
           <div className="auth-row">
-            <label className="checkbox-label">
-              <input type="checkbox" name="remember" checked={form.remember} onChange={handleChange} />
-              Remember me
-            </label>
             <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
           </div>
 

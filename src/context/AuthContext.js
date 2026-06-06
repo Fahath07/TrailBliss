@@ -7,28 +7,26 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // On app load, if a token exists fetch the user from MongoDB
+  // On app load, verify session with MongoDB via cookie
   useEffect(() => {
-    const token = localStorage.getItem('trailbliss_token');
-    if (!token) { setAuthLoading(false); return; }
-
     api.get('/user/profile')
-      .then(({ data }) => setUser(data.data || data.user || data))
-      .catch(() => {
-        // Token invalid/expired — clear it
-        localStorage.removeItem('trailbliss_token');
-        setUser(null);
-      })
+      .then(({ data }) => setUser(data.data))
+      .catch(() => setUser(null))
       .finally(() => setAuthLoading(false));
   }, []);
 
-  const login = (userData, token) => {
-    localStorage.setItem('trailbliss_token', token);
+  // Called after login/signup — backend already set the cookie
+  const login = (userData) => {
     setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('trailbliss_token');
+  // Calls backend to clear the httpOnly cookie
+  const logout = async () => {
+    try {
+      await api.post('/user/logout');
+    } catch {
+      // proceed regardless
+    }
     setUser(null);
   };
 

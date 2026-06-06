@@ -198,21 +198,21 @@ function AdminPanel() {
 
   // ── Derived stats ──────────────────────────────────────────────
   const revenue = bookings
-    .filter(b => b.status === "confirmed")
-    .reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+    .filter(b => b.status === "Confirmed" || b.status === "confirmed")
+    .reduce((sum, b) => sum + (b.pricing?.finalAmount || b.pricing?.totalAmount || 0), 0);
 
   const stats = [
     { icon: "📦", label: "Total Bookings", value: bookings.length, color: "#3B82F6" },
     { icon: "👥", label: "Total Users", value: users.length, color: "#8B5CF6" },
     { icon: "🗺️", label: "Total Trips", value: trips.length, color: "#10B981" },
-    { icon: "✅", label: "Confirmed", value: bookings.filter(b => b.status === "confirmed").length, color: "#F59E0B" },
+    { icon: "✅", label: "Confirmed", value: bookings.filter(b => b.status === "Confirmed").length, color: "#F59E0B" },
     { icon: "💬", label: "Enquiries", value: enquiries.length, color: "#EC4899" },
     { icon: "💰", label: "Revenue", value: `₹${revenue.toLocaleString()}`, color: "#14B8A6" },
   ];
 
   // ── Search filters ─────────────────────────────────────────────
   const filteredBookings = bookings.filter(b =>
-    !search || [b.user?.firstname, b.user?.lastname, b.user?.email, b.trip?.title]
+    !search || [b.user?.firstname, b.user?.lastname, b.user?.email, b.package?.title]
       .join(" ").toLowerCase().includes(search.toLowerCase())
   );
   const filteredUsers = users.filter(u =>
@@ -310,9 +310,9 @@ function AdminPanel() {
                       {recentBookings.map(b => (
                         <tr key={b._id}>
                           <td>{b.user?.firstname} {b.user?.lastname}</td>
-                          <td>{b.trip?.title}</td>
+                          <td>{b.package?.title}</td>
                           <td><span className={`badge ${STATUS_COLORS[b.status]}`}>{b.status}</span></td>
-                          <td>₹{b.totalPrice?.toLocaleString()}</td>
+                          <td>₹{b.pricing?.finalAmount?.toLocaleString() || "—"}</td>
                         </tr>
                       ))}
                       {recentBookings.length === 0 && <tr><td colSpan="4" style={{ textAlign: "center" }}>No bookings yet.</td></tr>}
@@ -351,10 +351,10 @@ function AdminPanel() {
             <div className="admin-breakdown card">
               <h3 style={{ marginBottom: 16 }}>Booking Status Breakdown</h3>
               <div className="breakdown-bars">
-                {["pending", "confirmed", "cancelled"].map(s => {
+                {["Pending", "Confirmed", "Cancelled"].map(s => {
                   const count = bookings.filter(b => b.status === s).length;
                   const pct = bookings.length ? Math.round((count / bookings.length) * 100) : 0;
-                  const colors = { pending: "#F59E0B", confirmed: "#10B981", cancelled: "#EF4444" };
+                  const colors = { Pending: "#F59E0B", Confirmed: "#10B981", Cancelled: "#EF4444" };
                   return (
                     <div key={s} className="breakdown-bar-row">
                       <span className="breakdown-label">{s.charAt(0).toUpperCase() + s.slice(1)}</span>
@@ -388,10 +388,10 @@ function AdminPanel() {
                     {filteredBookings.map(b => (
                       <tr key={b._id}>
                         <td>{b.user?.firstname} {b.user?.lastname}<br /><small>{b.user?.email}</small></td>
-                        <td>{b.trip?.title}<br /><small>{b.trip?.location?.city || b.trip?.destination}</small></td>
-                        <td>{b.seats || b.travelerDetails?.numberOfTravelers || "—"}</td>
+                        <td>{b.package?.title}<br /><small>{b.package?.location?.city}</small></td>
+                        <td>{b.travelerDetails?.numberOfTravelers || "—"}</td>
                         <td>{b.travelDetails?.startDate ? new Date(b.travelDetails.startDate).toLocaleDateString() : "—"}</td>
-                        <td><strong>₹{b.totalPrice?.toLocaleString() || "—"}</strong></td>
+                        <td><strong>₹{b.pricing?.finalAmount?.toLocaleString() || "—"}</strong></td>
                         <td>
                           <select className="admin-select" value={b.status}
                             onChange={e => updateBookingStatus(b._id, e.target.value)}>
