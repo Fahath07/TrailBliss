@@ -13,6 +13,7 @@ import FAQ from "../Pages/FAQ";
 import PrivacyPolicy from "../Pages/PrivacyPolicy";
 import Terms from "../Pages/Terms";
 import AdminPanel from "../Pages/AdminPanel";
+import MyBookings from "../Pages/MyBookings";
 import { useAuth } from "../context/AuthContext";
 
 function Layout({ children }) {
@@ -67,6 +68,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout><ApplicationForm /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-bookings"
+        element={
+          <ProtectedRoute>
+            <Layout><MyBookings /></Layout>
           </ProtectedRoute>
         }
       />

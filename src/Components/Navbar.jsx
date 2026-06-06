@@ -45,6 +45,7 @@ function Navbar() {
           <NavLink to="/about">About</NavLink>
           <NavLink to="/contact">Contact</NavLink>
           {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+          {user && <NavLink to="/my-bookings">My Bookings</NavLink>}
           <div className="nav-actions">
             {user ? (
               <>
