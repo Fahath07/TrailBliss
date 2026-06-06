@@ -47,8 +47,8 @@ function AdminRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Admin — no Navbar/Footer */}
-      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      {/* Admin */}
+      <Route path="/admin" element={<AdminRoute><Layout><AdminPanel /></Layout></AdminRoute>} />
 
       {/* Public pages */}
       <Route path="/" element={<Layout><Homepage /></Layout>} />
