@@ -125,7 +125,7 @@ function ApplicationForm() {
       }
       setSubmitted(true);
     } catch (err) {
-      setErrors({ submit: err.response?.data?.message || "Submission failed. Please try again." });
+      setErrors({ submit: err.response?.data?.error || err.response?.data?.message || "Submission failed. Please try again." });
     } finally {
       setLoading(false);
     }
